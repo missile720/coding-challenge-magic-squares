@@ -66,8 +66,6 @@ function checkMagicNumber(num) {
 }
 
 function magicSquare(n, max) {
-  const numberList = Array.from({ length: n * n }, (_, i) => i + 1);
-
   // Recursive function to generate number lists
   function generate(list, start) {
     if (list.length === n * n) {
