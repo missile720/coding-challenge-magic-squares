@@ -1,114 +1,102 @@
 let answer = [];
 
 function checkSquare(square, n, magicNumber) {
-    // Check rows
-    if (square.some(row => row.reduce((sum, num) => sum + num, 0) !== magicNumber)) {
-        return false;
+  // Check rows and columns
+  for (let i = 0; i < n; i++) {
+    let rowSum = 0;
+    let colSum = 0;
+    for (let j = 0; j < n; j++) {
+      rowSum += square[i][j];
+      colSum += square[j][i];
     }
+    if (rowSum !== magicNumber || colSum !== magicNumber) {
+      return false;
+    }
+  }
 
-    // if (square.some(row => row.reduce((sum, num) => sum + num**2, 0) !== magicNumber)) {
-    //     return false;
-    // }
+  // Check diagonals
+  let mainDiagonalSum = 0;
+  let secondaryDiagonalSum = 0;
+  for (let i = 0; i < n; i++) {
+    mainDiagonalSum += square[i][i];
+    secondaryDiagonalSum += square[i][n - i - 1];
+  }
+  if (mainDiagonalSum !== magicNumber || secondaryDiagonalSum !== magicNumber) {
+    return false;
+  }
 
-    // Check columns
-    for (let col = 0; col < n; col++) {
-        let sum = 0;
-        for (let row = 0; row < n; row++) {
-            sum += square[row][col];
-            //sum += square[row][col]**2;
+  return true;
+}
+
+function generateAllCombinations(n, numberList, magicNumber) {
+  let square = Array.from({ length: n }, () => Array(n).fill(0));
+
+  function generate(currentIndex) {
+    if (currentIndex === n * n) {
+      // Fill the square
+      for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+          square[i][j] = numberList[i * n + j];
         }
-        if (sum !== magicNumber) {
-            return false;
-        }
+      }
+
+      if (checkSquare(square, n, magicNumber)) {
+        answer.push(square.map(row => [...row]));
+      }
+
+      return;
     }
 
-    // Check main diagonal
-    let sum = 0;
-    for (let i = 0; i < n; i++) {
-        sum += square[i][i];
-        //sum += square[i][i]**2;
-    }
-    if (sum !== magicNumber) {
-        return false;
-    }
+    for (let i = currentIndex; i < numberList.length; i++) {
+      // Swap current element with the element at currentIndex
+      [numberList[currentIndex], numberList[i]] = [numberList[i], numberList[currentIndex]];
 
-    // Check secondary diagonal
-    sum = 0;
-    for (let i = 0; i < n; i++) {
-        sum += square[i][n - i - 1];
-        //sum += square[i][n - i - 1]**2;
-    }
-    if (sum !== magicNumber) {
-        return false;
-    }
+      generate(currentIndex + 1);
 
-    return true;
+      // Restore the original order of elements
+      [numberList[currentIndex], numberList[i]] = [numberList[i], numberList[currentIndex]];
+    }
+  }
+
+  generate(0);
 }
 
 function checkMagicNumber(num) {
-    if (num % 1 !== 0) {
-        return false;
-    } else {
-        return true;
-    }
+  return Number.isInteger(num);
 }
 
-function generateAllCombinations(n, numberList, magicNumber){
-    let square = Array.from({ length: n }, () => Array(n).fill(0));
+function magicSquare(n, max) {
+  const numberList = Array.from({ length: n * n }, (_, i) => i + 1);
 
-    function generate(currentCombination, remainingElements) {
-        if (remainingElements.length === 0) {
-            //fills square 
-            for (let i = 0; i < n; i++) {
-                for (let j = 0; j < n; j++) {
-                    square[i][j] = currentCombination.shift();
-                }
-            }
+  // Recursive function to generate number lists
+  function generate(list, start) {
+    if (list.length === n * n) {
+      const magicNumber = list.reduce((sum, num) => sum + num, 0) / n;
 
-            if(checkSquare(square, n, magicNumber)){
-                answer = square;
-                answer.forEach(row => console.log(row));
-                console.log("\n");
-            }
+      // Check if magic number is a whole number
+      if (checkMagicNumber(magicNumber)) {
+        generateAllCombinations(n, list, magicNumber);
+      }
 
-            return;
-        }
-    
-        for (let i = 0; i < remainingElements.length; i++) {
-            const updatedCombination = [...currentCombination, remainingElements[i]];
-            const remaining = [...remainingElements.slice(0, i), ...remainingElements.slice(i + 1)];
-            generate(updatedCombination, remaining);
-        }
+      return;
     }
 
-    //recursive function to find every combination of the array
-    generate([], numberList);
-}
-
-//size of square
-function magicSquare(n,max) {
-    // Recursive function to generate number lists
-    function generate(list, start) {
-        if (list.length === n**2) {
-            let magicNumber = list.reduce((sum, num) => sum + num, 0)/3;
-            //let magicNumber = numberList.reduce((sum, num) => sum + num**2, 0)/3;
-        
-            //check if magic number is whole
-            if(checkMagicNumber(magicNumber)){
-                generateAllCombinations(n, list, magicNumber);
-            }
-
-            return;
-        }
-
-        for (let i = start; i <= max - (n**2 - list.length) + 1; i++) {
-            generate([...list, i], i + 1);
-        }
+    for (let i = start; i <= max - (n * n - list.length) + 1; i++) {
+      generate([...list, i], i + 1);
     }
+  }
 
-    generate([], 1);
+  generate([], 1);
 }
 
 const size = 3;
 const max = 10;
-magicSquare(size,max);
+magicSquare(size, max);
+
+// Print the generated magic squares
+answer.forEach(square => {
+  square.forEach(row => {
+    console.log(row);
+  });
+  console.log('\n');
+});
